@@ -209,6 +209,43 @@ class STree():
                 return deepestNode
         return node
 
+    def _dfs_recursive(self, v, state):
+        if v not in state:
+            state[v] = {'count_leaves': 0}
+        for i in v.transition_links.values():
+            if i not in state:
+                self._dfs_recursive(i, state)
+                if i.is_leaf():
+                    state[i]['count_leaves'] = 1
+                state[v]['count_leaves'] += state[i]['count_leaves']
+
+    def _dfs(self, v):
+        state = {}
+        self._dfs_recursive(v, state)
+        return state
+
+    def lrs(self, count_occurrences=2):
+        state = self._dfs(self.root)
+        candidates = []
+        for n in state:
+            if state[n]['count_leaves'] >= count_occurrences:
+                candidates.append(n)
+
+        if candidates == []:
+            return b'' if self.input_type == bytes else ''
+
+        candidates = sorted(candidates, key=lambda x: x.depth, reverse=True)
+        for deepestNode in candidates:
+            start = deepestNode.idx
+            end = deepestNode.idx + deepestNode.depth
+            if self._suffix_contains_terminal_symbol(start, end):
+                continue
+            else:
+                start = deepestNode.idx
+                end = deepestNode.idx + deepestNode.depth
+                return self.word[start:end]
+        return b'' if self.input_type == bytes else ''
+
     def _generalized_word_starts(self, xs):
         """Helper method returns the starting indexes of strings in GST"""
         self.word_starts = []
